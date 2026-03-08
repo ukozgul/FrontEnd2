@@ -1,0 +1,11 @@
+src/
+├── components/
+│   ├── ui/                        # shadcn
+│   └── data-grid/
+│       ├── DataGrid.tsx           # Ana bileşen
+│       ├── DataGridToolbar.tsx    # Üst toolbar
+│       ├── DataGridPagination.tsx # Alt sayfalama
+│       ├── DataGridColumnHeader.tsx # Sütun başlığı (sort)
+│       ├── DataGridFilters.tsx    # Sütun filtreleri
+│       ├── DataGridExport.tsx     # Excel export
+│       └── types.ts               # Tip tanımları

@@ -1,0 +1,101 @@
+src/
+│
+├── 📁 api/
+│   ├── axiosInstance.ts
+│   └── 📁 endpoints/
+│       ├── authApi.ts
+│       ├── carApi.ts
+│       ├── brandApi.ts
+│       ├── colorApi.ts
+│       ├── rentalApi.ts
+│       └── customerApi.ts
+│
+├── 📁 assets/
+│   └── 📁 images/
+│       ├── logo.svg
+│       ├── hero-car.png
+│       └── no-image.png
+│
+├── 📁 components/
+│   ├── 📁 ui/                    # shadcn (otomatik gelir)
+│   │   ├── button.tsx
+│   │   ├── input.tsx
+│   │   ├── card.tsx
+│   │   ├── badge.tsx
+│   │   ├── select.tsx
+│   │   ├── dialog.tsx
+│   │   ├── table.tsx
+│   │   ├── toast.tsx
+│   │   ├── skeleton.tsx
+│   │   ├── calendar.tsx
+│   │   └── ...
+│   ├── 📁 layout/
+│   │   ├── Header.tsx
+│   │   ├── Footer.tsx
+│   │   ├── Sidebar.tsx
+│   │   └── MainLayout.tsx
+│   └── 📁 shared/
+│       ├── LoadingSpinner.tsx
+│       ├── ConfirmDialog.tsx
+│       ├── PageHeader.tsx
+│       ├── EmptyState.tsx
+│       └── StarRating.tsx
+│
+├── 📁 hooks/
+│   ├── useAuth.ts
+│   ├── useCars.ts
+│   ├── useBrands.ts
+│   ├── useColors.ts
+│   ├── useRentals.ts
+│   └── useCustomers.ts
+│
+├── 📁 pages/
+│   ├── 📁 auth/
+│   │   ├── LoginPage.tsx
+│   │   └── RegisterPage.tsx
+│   ├── 📁 home/
+│   │   └── HomePage.tsx
+│   ├── 📁 cars/
+│   │   ├── CarsPage.tsx
+│   │   ├── CarDetailPage.tsx
+│   │   ├── CreateCarPage.tsx
+│   │   └── EditCarPage.tsx
+│   ├── 📁 brands/
+│   │   └── BrandsPage.tsx
+│   ├── 📁 colors/
+│   │   └── ColorsPage.tsx
+│   ├── 📁 rentals/
+│   │   ├── RentalsPage.tsx
+│   │   └── RentCarPage.tsx
+│   ├── 📁 profile/
+│   │   └── ProfilePage.tsx
+│   └── NotFoundPage.tsx
+│
+├── 📁 types/
+│   ├── auth.ts
+│   ├── car.ts
+│   ├── brand.ts
+│   ├── color.ts
+│   ├── rental.ts
+│   ├── customer.ts
+│   └── common.ts
+│
+├── 📁 lib/
+│   ├── utils.ts
+│   └── formatters.ts
+│
+├── 📁 providers/
+│   ├── QueryProvider.tsx
+│   ├── AuthProvider.tsx
+│   └── ThemeProvider.tsx
+│
+├── 📁 routes/
+│   ├── AppRoutes.tsx
+│   └── ProtectedRoute.tsx
+│
+├── 📁 styles/
+│   └── globals.css
+│
+├── App.tsx
+├── main.tsx
+└── vite-env.d.ts
