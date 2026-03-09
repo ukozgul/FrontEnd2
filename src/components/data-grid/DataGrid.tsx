@@ -36,6 +36,7 @@ import { DataGridPagination } from "./DataGridPagination";
 import { DataGridFilters, ColumnFilter } from "./DataGridFilters";
 import { type DataGridProps } from "./types";
 import { cn } from "@/lib/utils";
+import { Checkbox } from "../ui/checkbox";
 
 export function DataGrid<TData>({
   data,
@@ -61,15 +62,51 @@ export function DataGrid<TData>({
   onPageChange,
   onPageSizeChange,
   serverSide = false,
+  selectionMode = "none",
+  onSelectionChange,
 }: DataGridProps<TData>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [globalFilter, setGlobalFilter] = useState("");
+  const [rowSelection, setRowSelection] = useState({});
+
 
   const table = useReactTable<TData>({
     data,
-    columns,
+    columns:
+      selectionMode !== "none"
+        ? [
+            {
+              id: "select",
+              header: ({ table }) =>
+                selectionMode === "multiple" ? (
+                  <Checkbox
+                    checked={
+                      table.getIsAllPageRowsSelected() ||
+                      (table.getIsSomePageRowsSelected() && "indeterminate")
+                    }
+                    onCheckedChange={(value) =>
+                      table.toggleAllPageRowsSelected(!!value)
+                    }
+                    aria-label="Select all"
+                  />
+                ) : null,
+              cell: ({ row }) => (
+                <Checkbox
+                  checked={row.getIsSelected()}
+                  onCheckedChange={(value) => row.toggleSelected(!!value)}
+                  aria-label="Select row"
+                />
+              ),
+              enableSorting: false,
+              enableHiding: false,
+            },
+            ...columns,
+          ]
+        : columns,
+
+    
     getCoreRowModel: getCoreRowModel(),
     ...(!serverSide && pagination
       ? { getPaginationRowModel: getPaginationRowModel() }
@@ -77,20 +114,22 @@ export function DataGrid<TData>({
     ...(sortable ? { getSortedRowModel: getSortedRowModel() } : {}),
     ...(filterable || searchable
       ? {
-          getFilteredRowModel: getFilteredRowModel(),
-          getFacetedRowModel: getFacetedRowModel(),
-          getFacetedUniqueValues: getFacetedUniqueValues(),
-        }
+        getFilteredRowModel: getFilteredRowModel(),
+        getFacetedRowModel: getFacetedRowModel(),
+        getFacetedUniqueValues: getFacetedUniqueValues(),
+      }
       : {}),
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
     onGlobalFilterChange: setGlobalFilter,
+    onRowSelectionChange: setRowSelection,
     state: {
       sorting,
       columnFilters,
       columnVisibility,
       globalFilter,
+      rowSelection,
     },
     initialState: {
       pagination: { pageSize },
@@ -139,7 +178,7 @@ export function DataGrid<TData>({
                   disabled={isDisabled}
                   className={cn(
                     item.variant === "destructive" &&
-                      "text-destructive focus:text-destructive focus:bg-destructive/10"
+                    "text-destructive focus:text-destructive focus:bg-destructive/10"
                   )}
                   onClick={(e) => {
                     e.stopPropagation();
@@ -210,9 +249,9 @@ export function DataGrid<TData>({
                     {header.isPlaceholder
                       ? null
                       : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
 
                     {filterable &&
                       header.column.getCanFilter() &&
