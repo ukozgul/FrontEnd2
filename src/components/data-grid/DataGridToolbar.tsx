@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { DataGridExport } from "./DataGridExport";
-import { Search, SlidersHorizontal, X, RefreshCw } from "lucide-react";
+import { Search, SlidersHorizontal, X } from "lucide-react";
 import type { ReactNode } from "react";
 
 interface DataGridToolbarProps<TData> {

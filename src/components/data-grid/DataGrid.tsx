@@ -1,7 +1,6 @@
 // src/components/data-grid/DataGrid.tsx
 import { useState } from "react";
 import {
-  type ColumnDef,
   type ColumnFiltersState,
   type SortingState,
   type VisibilityState,
@@ -63,8 +62,7 @@ export function DataGrid<TData>({
   onPageSizeChange,
   serverSide = false,
   selectionMode = "none",
-  onSelectionChange,
-}: DataGridProps<TData>) {
+  }: DataGridProps<TData>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
@@ -77,36 +75,42 @@ export function DataGrid<TData>({
     columns:
       selectionMode !== "none"
         ? [
-            {
-              id: "select",
-              header: ({ table }) =>
-                selectionMode === "multiple" ? (
-                  <Checkbox
-                    checked={
-                      table.getIsAllPageRowsSelected() ||
-                      (table.getIsSomePageRowsSelected() && "indeterminate")
-                    }
-                    onCheckedChange={(value) =>
-                      table.toggleAllPageRowsSelected(!!value)
-                    }
-                    aria-label="Select all"
-                  />
-                ) : null,
-              cell: ({ row }) => (
+          {
+            id: "select",
+            header: ({ table }) =>
+              selectionMode === "multiple" ? (
                 <Checkbox
-                  checked={row.getIsSelected()}
-                  onCheckedChange={(value) => row.toggleSelected(!!value)}
-                  aria-label="Select row"
+                  checked={
+                    table.getIsAllPageRowsSelected() ||
+                    (table.getIsSomePageRowsSelected() && "indeterminate")
+                  }
+                  onCheckedChange={(value) =>
+                    table.toggleAllPageRowsSelected(!!value)
+                  }
+                  aria-label="Select all"
                 />
-              ),
-              enableSorting: false,
-              enableHiding: false,
-            },
-            ...columns,
-          ]
+              ) : null,
+            cell: ({ row }) => (
+              <Checkbox
+                checked={row.getIsSelected()}
+                onCheckedChange={(value) => {
+                  if (selectionMode === "single") {
+                    setRowSelection(value ? { [row.id]: true } : {})
+                  } else {
+                    row.toggleSelected(!!value)
+                  }
+                }}
+                aria-label="Select row"
+              />
+            ),
+            enableSorting: false,
+            enableHiding: false,
+          },
+          ...columns,
+        ]
         : columns,
 
-    
+
     getCoreRowModel: getCoreRowModel(),
     ...(!serverSide && pagination
       ? { getPaginationRowModel: getPaginationRowModel() }
@@ -123,7 +127,20 @@ export function DataGrid<TData>({
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
     onGlobalFilterChange: setGlobalFilter,
-    onRowSelectionChange: setRowSelection,
+    onRowSelectionChange: (updater) => {
+      const newSelection =
+        typeof updater === "function" ? updater(rowSelection) : updater;
+
+      if (selectionMode === "single") {
+        const firstKey = Object.keys(newSelection).find(
+          (key) => newSelection[key]
+        );
+
+        setRowSelection(firstKey ? { [firstKey]: true } : {});
+      } else {
+        setRowSelection(newSelection);
+      }
+    },
     state: {
       sorting,
       columnFilters,
