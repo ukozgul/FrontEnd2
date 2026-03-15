@@ -261,7 +261,7 @@ export function DataGrid<TData>({
                           ? header.getSize()
                           : undefined,
                     }}
-                    className="align-top"
+                    className="align-center"
                   >
                     {header.isPlaceholder
                       ? null

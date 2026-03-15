@@ -16,7 +16,9 @@ export default function page() {
                     { accessorKey: 'ad', header: 'Ad' },
                     { accessorKey: 'soyad', header: 'Soyad' },]}
                 selectionMode="multiple"
-               
+                title="Kullanıclılar"
+                exportable
+                filterable={false}
             />
         </div>
     )
