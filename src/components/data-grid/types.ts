@@ -1,6 +1,14 @@
 // src/components/data-grid/types.ts
-import { type ColumnDef } from "@tanstack/react-table";
+
+import { type ColumnDef, type RowData } from "@tanstack/react-table";
 import { type ReactNode } from "react";
+
+declare module "@tanstack/react-table" {
+  interface ColumnMeta<TData extends RowData, TValue> {
+    label?: string;
+    sticky?: "left" | "right";
+  }
+}
 
 // Context Menu Item tipi
 export interface ContextMenuItem<TData> {
@@ -34,15 +42,8 @@ export interface DataGridProps<TData> {
   exportable?: boolean;
   exportFileName?: string;
 
-  // ✅ Seçim
+  // Seçim
   selectionMode?: SelectionMode;
-  selectedRows?: TData[];
-  onSelectionChange?: (selectedRows: TData[]) => void;
-  rowKey?: keyof TData;
-
-  // ✅ Drag & Drop Sıralama
-  draggable?: boolean;
-  onReorder?: (newData: TData[]) => void;
 
   // Aksiyonlar
   onRowClick?: (row: TData) => void;
@@ -65,4 +66,31 @@ export interface DataGridProps<TData> {
   onPageChange?: (page: number) => void;
   onPageSizeChange?: (pageSize: number) => void;
   serverSide?: boolean;
+
+  // Satır stilleri
+  rowClassName?: (row: TData) => string | undefined;
+  rowStyle?: (row: TData) => React.CSSProperties | undefined;
+
+  // Satır genişletme
+  expandable?: boolean;
+  expandedRowRender?: (row: TData) => React.ReactNode;
+
+  // Kolon sürükleme
+  columnReorder?: boolean;
+  onColumnReorder?: (columnOrder: string[]) => void;
+
+  // Satır sürükleme
+  rowDraggable?: boolean;
+  onRowReorder?: (newData: TData[]) => void;
+
+  // Özet satırı
+  summaryRow?:
+    | Partial<Record<keyof TData, "sum" | "avg" | "min" | "max" | "count">>
+    | ((data: TData[]) => Partial<Record<keyof TData, string | number>>);
+
+  // Kolon resize
+  columnResizable?: boolean;
+
+  // Klavye navigasyonu
+  keyboardNavigation?: boolean;
 }
