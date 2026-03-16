@@ -82,7 +82,15 @@ function DraggableHeader<TData>({
         transform: CSS.Transform.toString(transform),
         transition,
         opacity: isDragging ? 0.5 : 1,
-        width: header.getSize(),
+        width: columnResizable
+          ? header.getSize()
+          : header.getSize() !== 150
+          ? header.getSize()
+          : undefined,
+        maxWidth:
+          !columnResizable && header.getSize() !== 150
+            ? header.getSize()
+            : undefined,
         position: "relative",
         overflow: "hidden",
         ...(header.column.columnDef.meta?.sticky && {
@@ -108,10 +116,17 @@ function DraggableHeader<TData>({
           </div>
         )}
 
+      {/* Resize tutacağı — sürüklemeyi engelle */}
       {columnResizable && header.column.getCanResize() && (
         <div
-          onMouseDown={header.getResizeHandler()}
-          onTouchStart={header.getResizeHandler()}
+          onMouseDown={(e) => {
+            e.stopPropagation();
+            header.getResizeHandler()(e);
+          }}
+          onTouchStart={(e) => {
+            e.stopPropagation();
+            header.getResizeHandler()(e);
+          }}
           className={cn(
             "absolute right-0 top-0 h-full w-1 cursor-col-resize select-none touch-none",
             "bg-border hover:bg-primary/50",
@@ -227,6 +242,7 @@ export function DataGrid<TData>({
     useSensor(KeyboardSensor)
   );
 
+  // Kolon sürükleme handler
   const handleColumnDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (active && over && active.id !== over.id) {
@@ -240,16 +256,20 @@ export function DataGrid<TData>({
     }
   };
 
+  // Satır sürükleme handler — row.id kullanır
   const handleRowDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (active && over && active.id !== over.id) {
-      setDraggableData((prev) => {
-        const oldIndex = prev.findIndex((_, i) => String(i) === active.id);
-        const newIndex = prev.findIndex((_, i) => String(i) === over.id);
-        const newData = arrayMove(prev, oldIndex, newIndex);
-        onRowReorder?.(newData);
-        return newData;
-      });
+      const rows = table.getRowModel().rows;
+      const oldIndex = rows.findIndex((r) => r.id === active.id);
+      const newIndex = rows.findIndex((r) => r.id === over.id);
+      if (oldIndex !== -1 && newIndex !== -1) {
+        setDraggableData((prev) => {
+          const newData = arrayMove(prev, oldIndex, newIndex);
+          onRowReorder?.(newData);
+          return newData;
+        });
+      }
     }
   };
 
@@ -279,7 +299,9 @@ export function DataGrid<TData>({
       const newSelection =
         typeof updater === "function" ? updater(rowSelection) : updater;
       if (selectionMode === "single") {
-        const firstKey = Object.keys(newSelection).find((key) => newSelection[key]);
+        const firstKey = Object.keys(newSelection).find(
+          (key) => newSelection[key]
+        );
         setRowSelection(firstKey ? { [firstKey]: true } : {});
       } else {
         setRowSelection(newSelection);
@@ -346,7 +368,10 @@ export function DataGrid<TData>({
               )}
               onClick={(e) => {
                 e.stopPropagation();
-                setExpanded((prev) => ({ ...prev, [row.id]: !prev[row.id] }));
+                setExpanded((prev) => ({
+                  ...prev,
+                  [row.id]: !prev[row.id],
+                }));
               }}
             />
           )}
@@ -500,10 +525,11 @@ export function DataGrid<TData>({
 
       <div className="rounded-md border overflow-auto">
         <Table
-          style={{
-            width: columnResizable ? table.getTotalSize() : undefined,
-            tableLayout: columnResizable ? "fixed" : undefined,
-          }}
+          style={
+            columnResizable
+              ? { width: table.getTotalSize(), tableLayout: "fixed" }
+              : undefined
+          }
         >
           {/* ── HEADER ── */}
           <DndContext
@@ -525,7 +551,8 @@ export function DataGrid<TData>({
                         <Checkbox
                           checked={
                             table.getIsAllPageRowsSelected() ||
-                            (table.getIsSomePageRowsSelected() && "indeterminate")
+                            (table.getIsSomePageRowsSelected() &&
+                              "indeterminate")
                           }
                           onCheckedChange={(value) =>
                             table.toggleAllPageRowsSelected(!!value)
@@ -552,7 +579,15 @@ export function DataGrid<TData>({
                         <TableHead
                           key={header.id}
                           style={{
-                            width: header.getSize(),
+                            width: columnResizable
+                              ? header.getSize()
+                              : header.getSize() !== 150
+                              ? header.getSize()
+                              : undefined,
+                            maxWidth:
+                              !columnResizable && header.getSize() !== 150
+                                ? header.getSize()
+                                : undefined,
                             position: "relative",
                             overflow: "hidden",
                             ...(header.column.columnDef.meta?.sticky && {
@@ -573,16 +608,24 @@ export function DataGrid<TData>({
 
                           {filterable &&
                             header.column.getCanFilter() &&
-                            header.column.columnDef.enableColumnFilter !== false && (
+                            header.column.columnDef.enableColumnFilter !==
+                              false && (
                               <div className="mt-0.5 pb-0.5">
                                 <ColumnFilter<TData> column={header.column} />
                               </div>
                             )}
 
+                          {/* Resize tutacağı */}
                           {columnResizable && header.column.getCanResize() && (
                             <div
-                              onMouseDown={header.getResizeHandler()}
-                              onTouchStart={header.getResizeHandler()}
+                              onMouseDown={(e) => {
+                                e.stopPropagation();
+                                header.getResizeHandler()(e);
+                              }}
+                              onTouchStart={(e) => {
+                                e.stopPropagation();
+                                header.getResizeHandler()(e);
+                              }}
                               className={cn(
                                 "absolute right-0 top-0 h-full w-1 cursor-col-resize select-none touch-none",
                                 "bg-border hover:bg-primary/50",
@@ -635,7 +678,10 @@ export function DataGrid<TData>({
 
                           {expandable && isExpanded && expandedRowRender && (
                             <TableRow className="bg-muted/20 hover:bg-muted/20">
-                              <TableCell colSpan={totalColSpan} className="p-4">
+                              <TableCell
+                                colSpan={totalColSpan}
+                                className="p-4"
+                              >
                                 {expandedRowRender(row.original)}
                               </TableCell>
                             </TableRow>
@@ -665,7 +711,9 @@ export function DataGrid<TData>({
             <tfoot>
               <tr className="border-t-2 bg-muted/50 font-medium text-sm">
                 {rowDraggable && <td className="w-8" />}
-                {(expandable || selectionMode !== "none") && <td className="w-10" />}
+                {(expandable || selectionMode !== "none") && (
+                  <td className="w-10" />
+                )}
                 {table.getVisibleLeafColumns().map((column) => {
                   const key = column.id as keyof TData;
                   let value: string | number = "";
@@ -676,17 +724,26 @@ export function DataGrid<TData>({
                   } else {
                     const agg = (
                       summaryRow as Partial<
-                        Record<keyof TData, "sum" | "avg" | "min" | "max" | "count">
+                        Record<
+                          keyof TData,
+                          "sum" | "avg" | "min" | "max" | "count"
+                        >
                       >
                     )[key];
                     if (agg) {
                       const vals = data
                         .map((row) => Number(row[key]))
                         .filter((v) => !isNaN(v));
-                      if (agg === "sum")   value = vals.reduce((a, b) => a + b, 0);
-                      if (agg === "avg")   value = vals.length ? +(vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(2) : 0;
-                      if (agg === "min")   value = Math.min(...vals);
-                      if (agg === "max")   value = Math.max(...vals);
+                      if (agg === "sum")
+                        value = vals.reduce((a, b) => a + b, 0);
+                      if (agg === "avg")
+                        value = vals.length
+                          ? +(
+                              vals.reduce((a, b) => a + b, 0) / vals.length
+                            ).toFixed(2)
+                          : 0;
+                      if (agg === "min") value = Math.min(...vals);
+                      if (agg === "max") value = Math.max(...vals);
                       if (agg === "count") value = data.length;
                     }
                   }

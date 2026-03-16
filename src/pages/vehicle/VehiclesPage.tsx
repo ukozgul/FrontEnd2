@@ -5,17 +5,21 @@ import { carService } from "@/api/carService";
 import { Button } from "@/components/ui/button";
 import { Copy, Eye, Pencil, Plus, Trash2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import { Link } from "react-router-dom";
 import type { VehicleRead } from "@/types/vehicle";
 import type { ContextMenuItem } from "@/components/data-grid/types";
 import { DataGrid } from "@/components/data-grid/DataGrid";
 import { cn } from "@/lib/utils";
+import { VehicleFormDialog } from "@/pages/vehicle/VehicleFormDialog";
 
 export default function VehiclesPage() {
   const [cars, setCars] = useState<VehicleRead[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+
+  // Dialog state
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedVehicle, setSelectedVehicle] = useState<VehicleRead | undefined>(undefined);
 
   const fetchCars = useCallback(async () => {
     try {
@@ -39,6 +43,18 @@ export default function VehiclesPage() {
   useEffect(() => {
     fetchCars();
   }, [fetchCars]);
+
+  // Yeni araç dialog'u aç
+  const openCreateDialog = () => {
+    setSelectedVehicle(undefined);
+    setDialogOpen(true);
+  };
+
+  // Düzenleme dialog'u aç
+  const openEditDialog = (vehicle: VehicleRead) => {
+    setSelectedVehicle(vehicle);
+    setDialogOpen(true);
+  };
 
   // Durum badge renkleri
   const statusStyles: Record<string, string> = {
@@ -130,7 +146,7 @@ export default function VehiclesPage() {
             className="h-7 w-7"
             onClick={(e) => {
               e.stopPropagation();
-              console.log("Düzenle:", row.original);
+              openEditDialog(row.original);
             }}
           >
             <Pencil className="h-4 w-4" />
@@ -149,7 +165,7 @@ export default function VehiclesPage() {
     {
       label: "Düzenle",
       icon: <Pencil className="h-4 w-4" />,
-      onClick: (vehicle) => console.log("Düzenle:", vehicle),
+      onClick: (vehicle) => openEditDialog(vehicle),
       separator: true,
     },
     {
@@ -179,10 +195,8 @@ export default function VehiclesPage() {
     <div className="container mx-auto py-6 space-y-4">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Araç Listesi</h1>
-        <Button asChild>
-          <Link to="/cars/new">
-            <Plus className="mr-2 h-4 w-4" /> Yeni Araç
-          </Link>
+        <Button onClick={openCreateDialog}>
+          <Plus className="mr-2 h-4 w-4" /> Yeni Araç
         </Button>
       </div>
 
@@ -200,55 +214,26 @@ export default function VehiclesPage() {
         exportable
         exportFileName="araclar"
         emptyMessage="Sistemde kayıtlı araç bulunmuyor."
-
-        // Satır renklendirme
         rowClassName={(vehicle) => {
           if (vehicle.status_name === "Rented")      return "bg-blue-50/50 dark:bg-blue-950/20";
           if (vehicle.status_name === "Reserved")    return "bg-yellow-50/50 dark:bg-yellow-950/20";
           if (vehicle.status_name === "Maintenance") return "bg-red-50/50 dark:bg-red-950/20";
         }}
-
-        // Satır genişletme
-        // expandable
-        // expandedRowRender={(vehicle) => (
-        //   <div className="grid grid-cols-4 gap-4 text-sm">
-        //     <div>
-        //       <span className="font-medium text-muted-foreground">Şube: </span>
-        //       <span>{vehicle.branch_name}</span>
-        //     </div>
-        //     <div>
-        //       <span className="font-medium text-muted-foreground">Kategori: </span>
-        //       <span>{vehicle.category_name}</span>
-        //     </div>
-        //     <div>
-        //       <span className="font-medium text-muted-foreground">Model: </span>
-        //       <span>{vehicle.model_name}</span>
-        //     </div>
-        //     <div>
-        //       <span className="font-medium text-muted-foreground">Durum: </span>
-        //       <span>{vehicle.status_name}</span>
-        //     </div>
-        //   </div>
-        // )}
-
-        // Kolon sürükleme
         columnReorder
         onColumnReorder={(order) => console.log("Yeni kolon sırası:", order)}
-
-        // Satır sürükleme
-        // rowDraggable
-        // onRowReorder={(newData) => setCars(newData)}
-
-        // Özet satırı
-        summaryRow={{
-          year: "avg",
-        }}
-
-        // Kolon resize
-        columnResizable
-
-        // Klavye navigasyonu
+        summaryRow={{ year: "avg" }}
         keyboardNavigation
+      />
+
+      {/* key prop'u sayesinde her açılışta form sıfırlanır:
+          - Yeni araç → key="new"
+          - Düzenleme → key="{araç id'si}" */}
+      <VehicleFormDialog
+        key={selectedVehicle?.id ?? "new"}
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        vehicle={selectedVehicle}
+        onSuccess={fetchCars}
       />
     </div>
   );
